@@ -123,7 +123,7 @@ Example — **ERSPAN**:
 - **Connector health:** **Manage → Connectors** → connector shows **Active** with a recent heartbeat and non-zero received records.
 - **Flows landing:** open **Investigate → Flows** (or the connector's stats) and confirm flows tagged from the exporter appear.
 - **ERSPAN:** confirm the **Agent Packet Misses** graph is ~0; if not, reduce the mirrored scope.
-- **NAT stitching (F5/NetScaler/ASA):** spot-check that client↔VIP↔server flows are stitched into a single observation.
+- **NAT correlation (F5 / NetScaler / ASA):** spot-check that both halves of the connection — client side and server side — show up correlated and annotated. Cisco documents that correlation. It does not describe the two halves merged into one flow record. If the flows arrived and the real client is still hidden behind the SNAT address, the export landed on the **NetFlow** connector. F5 IPFIX belongs on the **F5** connector (UDP 4739). See [csw-f5-integration](https://github.com/chandrapati/csw-f5-integration).
 
 ---
 
@@ -134,6 +134,7 @@ Example — **ERSPAN**:
 - **ERSPAN sizing.** Each ERSPAN connector has 2 dedicated vCPUs; oversubscribed SPAN sessions drop packets. Trim the VLAN/port list.
 - **"Secure Firewall Connector"** (formerly ASA) ingests **NSEL** on an Ingest appliance — it is **not** the FMC policy-push integration and **not** the Secure Connector tunnel.
 - **Port collisions.** Two IPFIX connectors both default to 4739 — put them on different slot IPs or change the port via `update-listening-ports`.
+- **Wrong connector, flows still arrive.** The NetFlow connector accepts an IPFIX export and will show traffic. Correlating the two halves of a NATed connection is the F5, NetScaler, or ASA connector's job. Sending F5 IPFIX to the NetFlow connector leaves the real client behind the SNAT address.
 - **Redeploy to patch.** Pick up OS/package updates by **redeploying** from the latest Ingest OVA — not in place.
 - **Time sync.** Registration fails without correct NTP.
 

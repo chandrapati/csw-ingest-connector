@@ -406,8 +406,14 @@ Flows</strong> (or the connector’s stats) and confirm flows tagged from
 the exporter appear.</li>
 <li><strong>ERSPAN:</strong> confirm the <strong>Agent Packet
 Misses</strong> graph is ~0; if not, reduce the mirrored scope.</li>
-<li><strong>NAT stitching (F5/NetScaler/ASA):</strong> spot-check that
-client↔︎VIP↔︎server flows are stitched into a single observation.</li>
+<li><strong>NAT correlation (F5 / NetScaler / ASA):</strong> spot-check
+that both halves of the connection — client side and server side —
+show up correlated and annotated. Cisco documents that correlation.
+It does not describe the two halves merged into one flow record. If
+the flows arrived and the real client is still hidden behind the SNAT
+address, the export landed on the <strong>NetFlow</strong> connector.
+F5 IPFIX belongs on the <strong>F5</strong> connector (UDP 4739). See
+<a href="https://github.com/chandrapati/csw-f5-integration">csw-f5-integration</a>.</li>
 </ul>
 <hr />
 <h2 id="caveats-gotchas">7. Caveats &amp; gotchas</h2>
@@ -428,6 +434,11 @@ VLAN/port list.</li>
 <li><strong>Port collisions.</strong> Two IPFIX connectors both default
 to 4739 — put them on different slot IPs or change the port via
 <code>update-listening-ports</code>.</li>
+<li><strong>Wrong connector, flows still arrive.</strong> The NetFlow
+connector accepts an IPFIX export and will show traffic. Correlating
+the two halves of a NATed connection is the F5, NetScaler, or ASA
+connector’s job. Sending F5 IPFIX to the NetFlow connector leaves the
+real client behind the SNAT address.</li>
 <li><strong>Redeploy to patch.</strong> Pick up OS/package updates by
 <strong>redeploying</strong> from the latest Ingest OVA — not in
 place.</li>

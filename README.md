@@ -10,6 +10,8 @@ The **Secure Workload Ingest** appliance collects **flow / packet telemetry** an
 - **F5 / NetScaler / AnyConnect** (IPFIX / AppFlow / nvzFlow) → UDP **4739**
 - **ERSPAN** (SPAN/TAP mirror) → **GRE** (IP proto 47); 3 connectors auto-provisioned
 
+> **Which connector correlates NAT.** The **F5**, **NetScaler**, and **ASA** connectors correlate both halves of a NATed connection and annotate them. Cisco documents that correlation; it does not describe the two halves merged into one flow record. The **NetFlow** connector collects what the router or switch exported, so an F5 export sent there stays hidden behind the SNAT address. F5 step-by-step: [csw-f5-integration](https://github.com/chandrapati/csw-f5-integration).
+
 ---
 
 ## Architecture
@@ -38,7 +40,7 @@ The **Secure Workload Ingest** appliance collects **flow / packet telemetry** an
 1. **Deploy the appliance** — **Manage → Connectors** → enable an ingest connector (e.g., **NetFlow**) → when prompted, deploy a **Secure Workload Ingest** VM (8 vCPU / 8 GB / 250 GB, **3 NICs**).
 2. **Register** — power on; watch **Pending Registration → Active** under **Manage → Virtual Appliances**.
 3. **Note the slot IP:port** — NetFlow/NSEL/Meraki → UDP **4729**; F5/NetScaler/AnyConnect → UDP **4739**; ERSPAN → GRE.
-4. **Point the exporter** — configure the device's NetFlow/IPFIX/AppFlow collector (or SPAN/ERSPAN source) to the connector.
+4. **Point the exporter at the matching connector** — NetFlow v9 to **NetFlow**, F5 IPFIX to **F5**, NetScaler AppFlow to **NetScaler**, NSEL to **Secure Firewall**, mirror sessions to **ERSPAN**. F5 or NetScaler exports sent to the NetFlow connector arrive as flows and stay hidden behind the SNAT address.
 5. **Verify** — connector heartbeat green + non-zero records; flows visible in **Investigate → Flows**; ERSPAN **Packet Misses** ~0.
 
 ---
@@ -50,7 +52,7 @@ The **Secure Workload Ingest** appliance collects **flow / packet telemetry** an
 | A **flow/packet** collector (NetFlow, IPFIX, NSEL, ERSPAN) | A **label/alert** appliance (that's **Edge**) |
 | Connectors that **listen on ports** (slots) | A **policy enforcement** point (agent / F5 / NetScaler / FMC / cloud) |
 | **≤ 3 connectors** each · **≤ 100** per root scope | The **Secure Connector** tunnel (Linux RPM) |
-| NAT-stitching for F5 / NetScaler / ASA | A replacement for CSW agents |
+| **F5**, **NetScaler**, and **ASA** connectors that correlate both halves of a NATed connection. The **NetFlow** connector collects the export as sent | A replacement for CSW agents |
 
 ---
 
